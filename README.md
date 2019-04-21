@@ -17,7 +17,7 @@ To use the calulator using secd machine one may run
 ./calulate_secd
 ```
 Syntax that I used can be understood from the exmamples shown.
-To end a line / to calculate an expression use ;; .
+To end a line or to calculate an expression use *;;* to end a line.
 
 Some examples : 
 ```
