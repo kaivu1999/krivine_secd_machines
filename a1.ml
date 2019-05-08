@@ -2,7 +2,6 @@ exception Not_implemented
 exception Closure_Error
 exception Type_Error
 
-
 type exptype = Tint | Tunit | Tbool | Tfunc of (exptype * exptype)
 
 (* abstract syntax *)
@@ -78,11 +77,15 @@ and table_krivine = string -> closure
 and stack_krivine = closure list
 
 
-let rec update_table_krivine (str:string) (cl:closure) (env:table_krivine) :table_krivine = (let func (stra:string) = (match stra with
+(* let rec update_table_krivine (str:string) (cl:closure) (env:table_krivine) :table_krivine = (let func (stra:string) = (match stra with
                                                                                str -> cl
                                                                               | _ -> (env str) )  in 
-                                                              func)
+                                                              func) *)
 
+
+
+let rec update_table_krivine (str:string) (cl:closure) (env:table_krivine) :table_krivine = (let func (stra:string) = if (stra = str) then cl else (env stra) in 
+                                                              func)
                                                               
 (* (Clos(Integer(i1),envd) , Clos(Plus(NIL,exp2),env)::s) -> match (krivine (Clos(exp2,env)) s) with
                                                         Clos(Integer(i),envdd) -> krivine (Clos(Integer(i1 + i2),env)) s
@@ -142,18 +145,18 @@ let rec krivine cl stack = match cl with
                                 (Clos(Bool(b1),envd1),Clos(Bool(b2),envd2)) -> Clos(Bool(b1 || b2),env)
                                 | _ -> raise Type_Error)
 | Clos(If_Then_Else(expb,exp1,exp2),env) -> (match (krivine (Clos(expb,env)) stack) with
-                                    (Clos(Bool(true),envd1)) -> (Clos(exp1,env))
-                                  | (Clos(Bool(false),envd1)) -> (Clos(exp2,env))
+                                    (Clos(Bool(true),envd1)) -> krivine (Clos(exp1,env)) stack
+                                  | (Clos(Bool(false),envd1)) -> krivine (Clos(exp2,env)) stack
                                   | _ -> raise Type_Error)
-| Clos(Lambda(exp1,exp2),env) -> (let absApplied (clx, s) = match (clx, s) with
-                        | ((Clos(Lambda(V(str),expd), env1)), c::c') -> (Clos(expd, (update_table_krivine str c env1)), c')
-                        | (_,[]) -> raise Type_Error
-                                            | _ -> raise Type_Error in 
+| Clos(Lambda(exp1,exp2),env) -> (let absApplied (clx, s) = (match (clx, s) with
+                                              | ((Clos(Lambda(V(str),expd), env1)), c::c') -> (Clos(expd, (update_table_krivine str c env1)), c')
+                                              | (_,[]) -> raise Type_Error
+                                              | _ -> raise Type_Error  )   in 
                                   let (cl', s') = absApplied (cl, stack) in
                                   krivine cl' s')
 | Clos (App(exp1, exp2), env) -> krivine (Clos(exp1,env)) ((Clos(exp2,env))::stack)
 | Clos (Paren(exp),env) -> krivine (Clos(exp,env)) stack
-  
+
 let rec execute_krivine exp table =  let cl = krivine (Clos(exp,table)) [] in 
   (match cl with 
   Clos(Integer(i), _ ) -> Number(i)
@@ -161,9 +164,7 @@ let rec execute_krivine exp table =  let cl = krivine (Clos(exp,table)) [] in
   | _ -> raise Closure_Error
   )
   
-let rec update_table_secd (str:string) (ans:answer) (env:table_secd) :table_secd = (let func (stra:string) = (match stra with
-                                                                               str -> ans
-                                                                              | _ -> (env str) )  in 
+let rec update_table_secd (str:string) (ans:answer) (env:table_secd) :table_secd = (let func (stra:string) = if stra = str then ans else (env stra)  in 
                                                               func)
   
 let rec secd (stack:stack_secd) (env:table_secd) (opcodes:opcode list) (dump:dump) :answer = match (stack,env,opcodes,dump) with
